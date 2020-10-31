@@ -25,6 +25,8 @@ import Extension from "./lib/Extension";
 import ExtensionManager from "./lib/ExtensionManager";
 import ComponentView from "./lib/ComponentView";
 import headingToSlug from "./lib/headingToSlug";
+import { YXmlFragment } from "yjs/dist/src/internals";
+import { WebsocketProvider } from "y-websocket";
 
 // nodes
 import ReactNode from "./nodes/ReactNode";
@@ -68,6 +70,7 @@ import Placeholder from "./plugins/Placeholder";
 import SmartText from "./plugins/SmartText";
 import TrailingNode from "./plugins/TrailingNode";
 import MarkdownPaste from "./plugins/MarkdownPaste";
+import Sync from "./plugins/Sync";
 
 export { schema, parser, serializer } from "./server";
 
@@ -79,6 +82,8 @@ export type Props = {
   id?: string;
   value?: string;
   defaultValue: string;
+  yXmlFragment: YXmlFragment;
+  yProvider: WebsocketProvider;
   placeholder: string;
   extensions: Extension[];
   autoFocus?: boolean;
@@ -282,6 +287,10 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
         }),
         new Strikethrough(),
         new OrderedList(),
+        new Sync({
+          yProvider: this.props.yProvider,
+          yXmlFragment: this.props.yXmlFragment,
+        }),
         new History(),
         new SmartText(),
         new TrailingNode(),

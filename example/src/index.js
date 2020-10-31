@@ -2,6 +2,17 @@ import * as React from "react";
 import debounce from "lodash/debounce";
 import ReactDOM from "react-dom";
 import Editor from "../../src";
+import * as Y from "yjs";
+import { WebsocketProvider } from "y-websocket";
+
+const ydoc = new Y.Doc();
+const provider = new WebsocketProvider(
+  "ws://localhost:1234",
+  "prosemirror-demo",
+  ydoc
+);
+
+const yXmlFragment = ydoc.getXmlFragment("demo-doc");
 
 const element = document.getElementById("main");
 const savedText = localStorage.getItem("saved");
@@ -128,6 +139,8 @@ class Example extends React.Component {
           readOnly={this.state.readOnly}
           readOnlyWriteCheckboxes
           value={this.state.value}
+          yProvider={provider}
+          yXmlFragment={yXmlFragment}
           template={this.state.template}
           defaultValue={defaultValue}
           scrollTo={window.location.hash}
