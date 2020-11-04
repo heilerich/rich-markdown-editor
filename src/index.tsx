@@ -71,6 +71,7 @@ import SmartText from "./plugins/SmartText";
 import TrailingNode from "./plugins/TrailingNode";
 import MarkdownPaste from "./plugins/MarkdownPaste";
 import Sync from "./plugins/Sync";
+import SyncedHistory from "./plugins/SyncedHistory";
 
 export { schema, parser, serializer } from "./server";
 
@@ -224,6 +225,10 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
 
   createExtensions() {
     const dictionary = this.dictionary(this.props.dictionary);
+    const historyExtension =
+      this.props.yXmlFragment !== undefined
+        ? new SyncedHistory()
+        : new History();
 
     // adding nodes here? Update schema.ts for serialization on the server
     return new ExtensionManager(
@@ -291,7 +296,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
           yProvider: this.props.yProvider,
           yXmlFragment: this.props.yXmlFragment,
         }),
-        new History(),
+        historyExtension,
         new SmartText(),
         new TrailingNode(),
         new MarkdownPaste(),
@@ -386,6 +391,25 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
 
   createState(value?: string) {
     const doc = this.createDocument(value || this.props.defaultValue);
+
+    if (
+      this.props.defaultValue !== undefined &&
+      this.props.yXmlFragment !== undefined
+    ) {
+      console.warn(
+        "Using a default value with collaborative editing can have unintended side " +
+          "effects like duplication of contents. Try setting the value of the " +
+          "synced document instead."
+      );
+    }
+
+    if (value !== undefined && this.props.yXmlFragment !== undefined) {
+      console.warn(
+        "Updating the value while using collaborative editing can have unintended " +
+          "side effects like duplication of contents. Try modifiying the synced " +
+          "documenten instead."
+      );
+    }
 
     return EditorState.create({
       schema: this.schema,

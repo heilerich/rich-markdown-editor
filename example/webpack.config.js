@@ -1,15 +1,12 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require("path");
 
-module.exports = {
+const commonDefaults = {
   mode: "development",
 
   resolve: {
-    mainFields: ["browser", "main"],
     extensions: [".ts", ".tsx", ".js"],
   },
-
-  entry: path.resolve(__dirname, "src", "index.js"),
 
   output: {
     filename: "main.js",
@@ -33,3 +30,14 @@ module.exports = {
     ],
   },
 };
+
+module.exports = [
+  {
+    name: "default",
+    entry: path.resolve(__dirname, "src", "index.js"),
+  },
+  {
+    name: "collab",
+    entry: path.resolve(__dirname, "src", "index-collab.js"),
+  },
+].map(configuration => Object.assign({}, configuration, commonDefaults));

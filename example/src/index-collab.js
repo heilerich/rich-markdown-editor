@@ -3,14 +3,35 @@ import debounce from "lodash/debounce";
 import ReactDOM from "react-dom";
 import Editor from "../../src";
 
-const element = document.getElementById("main");
-const savedText = localStorage.getItem("saved");
+import * as Y from "yjs";
+import { WebsocketProvider } from "y-websocket";
+import { IndexeddbPersistence } from "y-indexeddb";
+
 const exampleText = `
 # Welcome
 
-This is example content. It is persisted between reloads in localStorage.
+This is example content. It is persisted between reloads in the browser indexedDB.
 `;
-const defaultValue = savedText || exampleText;
+const defaultValue = exampleText;
+
+const ydoc = new Y.Doc();
+const yXmlFragment = ydoc.getXmlFragment("demo-doc");
+
+const webrtcProvider = new WebsocketProvider(
+  "ws://localhost:1234",
+  "prosemirror-demo",
+  ydoc
+);
+
+const indexeddbProvider = new IndexeddbPersistence("prosemirror-demo", ydoc);
+indexeddbProvider.whenSynced.then(() => {
+  if (yXmlFragment.toString() === "<paragraph></paragraph>") {
+    // TODO how to handle the value props?
+  }
+  console.log(`loaded data from indexed db`);
+});
+
+const element = document.getElementById("main");
 
 const docSearchResults = [
   {
@@ -69,7 +90,6 @@ class Example extends React.Component {
     readOnly: false,
     template: false,
     dark: localStorage.getItem("dark") === "enabled",
-    value: undefined,
   };
 
   handleToggleReadOnly = () => {
@@ -86,18 +106,10 @@ class Example extends React.Component {
     localStorage.setItem("dark", dark ? "enabled" : "disabled");
   };
 
-  handleUpdateValue = () => {
-    const existing = localStorage.getItem("saved") || "";
-    const value = `${existing}\n\nedit!`;
-    localStorage.setItem("saved", value);
-
-    this.setState({ value });
-  };
-
   handleChange = debounce(value => {
     const text = value();
     console.log(text);
-    localStorage.setItem("saved", text);
+    //localStorage.setItem("saved", text);
   }, 250);
 
   render() {
@@ -127,9 +139,9 @@ class Example extends React.Component {
           id="example"
           readOnly={this.state.readOnly}
           readOnlyWriteCheckboxes
-          value={this.state.value}
+          yProvider={webrtcProvider}
+          yXmlFragment={yXmlFragment}
           template={this.state.template}
-          defaultValue={defaultValue}
           scrollTo={window.location.hash}
           handleDOMEvents={{
             focus: () => console.log("FOCUS"),
